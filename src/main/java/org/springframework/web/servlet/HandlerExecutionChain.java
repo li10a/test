@@ -103,4 +103,36 @@ public class HandlerExecutionChain {
 			}
     	}
     }
+    
+    void applyAfterConcurrentHandlingStarted(HttpServletRequest request, HttpServletResponse response) {
+    	HandlerInterceptor[] interceptors = getInterceptors();
+    	if (!ObjectUtils.isEmpty(interceptors)) {
+    		for (int i = interceptors.length; i >= 0; i--) {
+				if (interceptors[i] instanceof AsyncHandlerInterceptor) {
+					try {
+						AsyncHandlerInterceptor asyncInterceptor = (AsyncHandlerInterceptor) interceptors[i];
+						asyncInterceptor.afterConcurrentHandlingStarted(request, response, asyncInterceptor);
+					} catch (Throwable e) {
+						logger.error("Interceptor [" + interceptors[i] + "] failed in afterConcurrentHandlingStarted", e);
+					}
+				}
+			}
+    	}
+    }
+    
+    @Override
+    public String toString() {
+    	Object object = getHandler();
+    	StringBuilder sb = new StringBuilder();
+    	sb.append("HandlerExecutionChain with [").append(handler).append("] and ");
+    	if (this.interceptorList != null) {
+    		sb.append(this.interceptorList.size());
+    	} else if (this.interceptors != null) {
+    		sb.append(this.interceptors.length);
+    	} else {
+    		sb.append(0);
+    	}
+    	
+    	return sb.append(" interceptors").toString();
+    }
 }
